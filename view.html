@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Posts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .post {
+            background-color: #f4f4f4;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        img {
+            width: 80vw; /* Set image width to 80% of the viewport width */
+            height: auto;
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Posts</h1>
+    <div id="postContainer"></div>
+
+    <script>
+        // Function to display posts stored in localStorage
+        function displayPosts() {
+            const postContainer = document.getElementById('postContainer');
+            postContainer.innerHTML = ""; // Clear existing posts
+
+            const posts = JSON.parse(localStorage.getItem('posts')) || [];
+
+            posts.forEach((post) => {
+                // Create a div for each post
+                const postElement = document.createElement('div');
+                postElement.classList.add('post');
+
+                // Add text content to the post
+                if (post.content) {
+                    const contentElement = document.createElement('p');
+                    contentElement.innerText = post.content;
+                    postElement.appendChild(contentElement);
+                }
+
+                // Add image to the post if it exists
+                if (post.image) {
+                    const imageElement = document.createElement('img');
+                    imageElement.src = post.image;
+                    postElement.appendChild(imageElement);
+                }
+
+                // Append the post to the post container
+                postContainer.appendChild(postElement);
+            });
+        }
+
+        // Display posts when the page loads
+        window.onload = function() {
+            displayPosts();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authenticated Post System with Image Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: url('bf9a415f-b758-4c0d-a820-334370772ec3.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .post {
+            background-color: rgba(0, 0, 0, 0.083);
+            margin: 10px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .post h3 {
+            font-size: 70px;
+            margin: 0;
+        }
+        .post p {
+            margin: 5px 0;
+            font-size: 30px;
+        }
+        #postSection {
+            display: none;
+        }
+        #imageName {
+            margin: 10px 0;
+            font-size: 15vw;
+            color: #333;
+        }
+        button {
+            color: black;
+            background-color: orange;
+            height: 50px;
+            width: 70px;
+            font-size: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+        input[type="text"], input[type="password"] {
+            width: 400px;
+            font-size: 35px;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            background-color: rgb(187, 242, 244);
+            color: black;
+            margin-bottom: 10px;
+        }
+        textarea {
+            width: 500px;
+            font-size: 30px;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: rgb(187, 242, 244);
+            color: black;
+        }
+        img {
+            max-width: 400px;
+            max-height: 300px;
+            display: block;
+            margin: 10px auto;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Post System with Image Upload</h1>
+
+    <div id="loginSection">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username"><br>
+        <input type="password" id="password" placeholder="Password"><br>
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div id="postSection">
+        <h2>Create a Post</h2>
+        <input type="text" id="postTitle" placeholder="Post Title"><br>
+        <input type="text" id="postAuthor" placeholder="Your Name"><br>
+        <textarea id="postContent" placeholder="Write something..."></textarea><br>
+        <input type="file" id="imageUpload" accept="image/*" onchange="updateImageName()"><br>
+        <h1 id="imageName"></h1>
+        <button onclick="createPost()">Post</button><br><br>
+        <a href="index.html">View Posts</a><br><br>
+        <div id="postsList"></div>
+    </div>
+
+    <script>
+        const users = [{ username: "admin", password: "admin123" }];
+
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const user = users.find(user => user.username === username && user.password === password);
+
+            if (user) {
+                localStorage.setItem('isAuthenticated', true);
+                toggleSections('postSection');
+                loadPosts();
+            } else {
+                alert('Invalid username or password.');
+            }
+        }
+
+        function toggleSections(showSection) {
+            document.getElementById('loginSection').style.display = showSection === 'loginSection' ? 'block' : 'none';
+            document.getElementById('postSection').style.display = showSection === 'postSection' ? 'block' : 'none';
+        }
+
+        function createPost() {
+            const title = document.getElementById('postTitle').value.trim();
+            const author = document.getElementById('postAuthor').value.trim();
+            const content = document.getElementById('postContent').value.trim();
+            const imageFile = document.getElementById('imageUpload').files[0];
+        
+            if (title && author && (content || imageFile)) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const draftPost = {
+                        title,
+                        author,
+                        content,
+                        image: e.target.result,
+                        confirmed: false
+                    };
+                    addDraftToStorage(draftPost);
+                    clearPostInputs();
+                };
+                if (imageFile) {
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    reader.onload();
+                }
+            } else {
+                alert("Please fill in all fields before posting.");
+            }
+        }
+        
+        function addDraftToStorage(draftPost) {
+            const drafts = JSON.parse(localStorage.getItem('drafts')) || [];
+            drafts.push(draftPost);
+            localStorage.setItem('drafts', JSON.stringify(drafts));
+        }
+
+        function clearPostInputs() {
+            document.getElementById('postTitle').value = "";
+            document.getElementById('postAuthor').value = "";
+            document.getElementById('postContent').value = "";
+            document.getElementById('imageUpload').value = "";
+            document.getElementById('imageName').innerText = "";
+        }
+
+        function addPostToStorage(post) {
+            const posts = JSON.parse(localStorage.getItem('posts')) || [];
+            posts.push(post);
+            localStorage.setItem('posts', JSON.stringify(posts));
+        }
+
+        function updateImageName() {
+            const imageUpload = document.getElementById('imageUpload');
+            document.getElementById('imageName').innerText = imageUpload.files.length > 0 ? imageUpload.files[0].name : "";
+        }
+
+        function loadPosts() {
+            const postsList = document.getElementById('postsList');
+            postsList.innerHTML = '';
+
+            const posts = JSON.parse(localStorage.getItem('posts')) || [];
+            posts.forEach((post, index) => {
+                const postDiv = document.createElement('div');
+                postDiv.className = 'post';
+
+                postDiv.innerHTML = `
+                    <h3>${post.title}</h3>
+                    <p>By: ${post.author}</p>
+                    <p>${post.content}</p>
+                    ${post.image ? `<img src="${post.image}" alt="Post Image">` : ''}
+                    <button onclick="deletePost(${index})">Delete</button>
+                `;
+
+                postsList.appendChild(postDiv);
+            });
+        }
+
+        function deletePost(index) {
+            const posts = JSON.parse(localStorage.getItem('posts')) || [];
+            posts.splice(index, 1);
+            localStorage.setItem('posts', JSON.stringify(posts));
+            loadPosts();
+        }
+
+        window.onload = function() {
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            if (isAuthenticated) {
+                toggleSections('postSection');
+                loadPosts();
+            }
+        };
+    </script>
+</body>
+</html>

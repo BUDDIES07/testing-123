@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Posts</title>
+    <style>
+        /* Add your styles here */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .post {
+            background-color: rgba(0, 0, 0, 0.083);
+            margin: 10px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .post img {
+            max-width: 400px;
+            max-height: 300px;
+            margin-top: 10px;
+            border-radius: 10px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Confirm Posts</h1>
+    <div id="pendingPostsList"></div>
+
+    <script>
+        function loadPendingPosts() {
+            const pendingPostsList = document.getElementById('pendingPostsList');
+            pendingPostsList.innerHTML = '';
+
+            const drafts = JSON.parse(localStorage.getItem('drafts')) || [];
+            drafts.forEach((post, index) => {
+                if (!post.confirmed) {
+                    const postDiv = document.createElement('div');
+                    postDiv.className = 'post';
+
+                    postDiv.innerHTML = `
+                        <h3>${post.title}</h3>
+                        <p>By: ${post.author}</p>
+                        <p>${post.content}</p>
+                        ${post.image ? `<img src="${post.image}" alt="Post Image">` : ''}
+                        <button onclick="confirmPost(${index})">Confirm</button>
+                        <button onclick="deleteDraft(${index})">Delete</button>
+                    `;
+
+                    pendingPostsList.appendChild(postDiv);
+                }
+            });
+        }
+
+        function confirmPost(index) {
+            const drafts = JSON.parse(localStorage.getItem('drafts')) || [];
+            drafts[index].confirmed = true;
+
+            // Move the confirmed post to the main posts storage
+            addPostToStorage(drafts[index]);
+            drafts.splice(index, 1); // Remove the draft after confirming
+            localStorage.setItem('drafts', JSON.stringify(drafts));
+
+            loadPendingPosts();
+        }
+
+        function deleteDraft(index) {
+            const drafts = JSON.parse(localStorage.getItem('drafts')) || [];
+            drafts.splice(index, 1);
+            localStorage.setItem('drafts', JSON.stringify(drafts));
+
+            loadPendingPosts();
+        }
+
+        function addPostToStorage(post) {
+            const posts = JSON.parse(localStorage.getItem('posts')) || [];
+            posts.push(post);
+            localStorage.setItem('posts', JSON.stringify(posts));
+        }
+
+        window.onload = loadPendingPosts;
+    </script>
+</body>
+</html>
